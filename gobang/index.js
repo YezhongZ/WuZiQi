@@ -2,6 +2,8 @@
 var Gobang = (function() {
 
     // 定义私有变量 roundDirectArr
+    // 方向数组
+    //[1,1][-1,1][0,1][-1,0]
     var arr = [1,-1,0]
     var roundDirectArr = []
     arr.forEach(v => roundDirectArr.push([v, 1]))
@@ -9,10 +11,12 @@ var Gobang = (function() {
 
     // 定义 Gobang 的方法集
     class GobangUtil {
+        //取属性值
         getProps(x,y) {
             return 'x'+x+'y'+y
         }
 
+        //在棋盘取颜色
         getColor(board, x, y) {
             return board[this.getProps(x,y)]
         }
@@ -21,27 +25,27 @@ var Gobang = (function() {
         getNumberOfCoinsInAllDirectionWithSameColor(x, y, board, direct) {
             var result = 0
             var bindGetcolor = this.getColor.bind(this, board)
-            var activeColor = bindGetcolor(x,y)
+            var targetColor = bindGetcolor(x,y)
 
             for (var i = 1; i < 5; i++) {
-                var nextColor = bindGetcolor(x + i * direct[0], y + i * direct[1])
-                if (activeColor == nextColor) { result++ } else {break}
+                var nextColortoCheck = bindGetcolor(x + i * direct[0], y + i * direct[1])
+                if (targetColor == nextColortoCheck) { result++ } else {break}
             }
             return result
         }
-        
+
         // 判断单个轴(两个方向)是否成立
         checkSingleLineDirection(x, y, board, direct) {
             var leftDirect = direct
             var rightDirect = direct.map(v=>-v)
             var getNum = this.getNumberOfCoinsInAllDirectionWithSameColor.bind(this, x, y, board)
 
-            return (getNum(leftDirect) + 1 + getNum(rightDirect)) >= 5  
+            return (getNum(leftDirect) + 1 + getNum(rightDirect)) >= 5
         }
 
         // 判断 4 个轴中是否有一个成立
-        checkRoundDirect(x, y, board, roundDirect) {
-            return roundDirect.some(direct => this.checkSingleLineDirection(x, y, board, direct))
+        checkFourDirections(x, y, board, roundDirect) {
+            return roundDirect.some(direction => this.checkSingleLineDirection(x, y, board, direction))
         }
     }
 
@@ -68,16 +72,13 @@ var Gobang = (function() {
 
             this.board[super.getProps(x, y, colorNumber)] = colorNumber
 
-            var isWin = super.checkRoundDirect(x, y, this.board, roundDirectArr)
+            var isWin = super.checkFourDirections(x, y, this.board, roundDirectArr)
             isWin ? this.callback.end(colorNumber) : this.callback.keep(colorNumber)
         }
     }
 
     return Gobang
 })()
-
-
-
 
 
 var Game = (function() {
@@ -100,16 +101,16 @@ var Game = (function() {
         return mygobang
     }
 
-    function renderTpl(num) {
-        var tpl, 
-            coordArr = [], 
+    function renderTpl(size) {
+        var tpl,
+            coordArr = [],
             htm = '',
-            arr = [...Array(num).keys()]
+            arr = [...Array(size).keys()]
 
             rwidth = ele.clientWidth
             // console.log(rwidth)
-            swidth = parseInt((rwidth/num), 10) + 'px'
-            cwidth = parseInt((rwidth/num/1.2), 10) + 'px'
+            swidth = parseInt((rwidth/size), 10) + 'px'
+            cwidth = parseInt((rwidth/size/1.2), 10) + 'px'
 
         tpl= (coord, color) => ( `
             <div class="square" style="width:${swidth};height:${swidth}">
@@ -139,7 +140,7 @@ var Game = (function() {
                 mygobang.palyChess(+coord[0], +coord[1], chessColor)
             }
         })
-    }  
+    }
 
     return {
         start(size,{onEnd,onKeep}) {
