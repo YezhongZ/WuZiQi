@@ -22,13 +22,13 @@ var Gobang = (function () {
         }
 
         // 返回每个方向的颜色值相同的棋子数
-        getNumberOfCoinsInAllDirectionWithSameColor(x, y, board, direct) {
+        getNumberOfCoinsInAllDirectionWithSameColor(x, y, board, direction) {
             var result = 0
             var bindGetcolor = this.getColor.bind(this, board)
             var targetColor = bindGetcolor(x, y)
 
             for (var i = 1; i < 5; i++) {
-                var nextColortoCheck = bindGetcolor(x + i * direct[0], y + i * direct[1])
+                var nextColortoCheck = bindGetcolor(x + i * direction[0], y + i * direction[1])
                 if (targetColor == nextColortoCheck) {
                     result++
                 } else {
@@ -39,11 +39,12 @@ var Gobang = (function () {
         }
 
         // 判断单个轴(两个方向)是否成立
-        checkSingleLineDirection(x, y, board, direct) {
-            var leftDirect = direct
-            var rightDirect = direct.map(v => -v)
+        checkSingleLineDirection(x, y, board, direction) {
+            var leftDirect = direction
+            var rightDirect = direction.map(v => -v) //反过来
             var getNum = this.getNumberOfCoinsInAllDirectionWithSameColor.bind(this, x, y, board)
 
+            //胜利条件 五子连珠（左侧数量 + 右侧数量）1 为本身
             return (getNum(leftDirect) + 1 + getNum(rightDirect)) >= 5
         }
 
@@ -57,6 +58,7 @@ var Gobang = (function () {
     class Gobang extends GobangUtil {
         constructor(callback) {
             super()
+            //对象，每个属性为已下棋子的坐标，属性值为该坐标的颜色值；
             var board = new Proxy({}, {
                 get: function (target, property) {
                     if (property in target) {
@@ -72,12 +74,13 @@ var Gobang = (function () {
             this.playChess = this.palyChess.bind(this)
         }
 
-        palyChess(x, y, colorNumber) {
+        //方法，是执行下棋的调用方法，参数分别为 x，y 坐标值与要下棋子的颜色值；
+        palyChess(x, y, coinColor) {
 
-            this.board[super.getProps(x, y, colorNumber)] = colorNumber
+            this.board[super.getProps(x, y, coinColor)] = coinColor
 
             var isWin = super.checkFourDirections(x, y, this.board, roundDirectArr)
-            isWin ? this.callback.end(colorNumber) : this.callback.keep(colorNumber)
+            isWin ? this.callback.end(coinColor) : this.callback.keep(coinColor)
         }
     }
 
@@ -93,10 +96,14 @@ var Game = (function () {
     function instantGobang(onEnd, onKeep) {
         // 生成 Gobang 实例，定义游戏结束与继续事件
         var mygobang = new Gobang({
+            //两个回调函数
+
+            //落子后 游戏胜利结束
             end(color) {
                 onEnd(color)
                 isWin = true
             },
+            //落子后 游戏继续的回调事件
             keep(color) {
                 onKeep(color)
             }
