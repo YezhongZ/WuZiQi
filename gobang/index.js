@@ -18,7 +18,7 @@ var Gobang = (function() {
         }
 
         // 返回每个方向的颜色值相同的棋子数
-        getDirectSameColorNum(x, y, board, direct) {
+        getNumberOfCoinsInAllDirectionWithSameColor(x, y, board, direct) {
             var result = 0
             var bindGetcolor = this.getColor.bind(this, board)
             var activeColor = bindGetcolor(x,y)
@@ -31,17 +31,17 @@ var Gobang = (function() {
         }
         
         // 判断单个轴(两个方向)是否成立
-        checkSingleDirect(x, y, board, direct) {
+        checkSingleLineDirection(x, y, board, direct) {
             var leftDirect = direct
             var rightDirect = direct.map(v=>-v)
-            var getNum = this.getDirectSameColorNum.bind(this, x, y, board)
+            var getNum = this.getNumberOfCoinsInAllDirectionWithSameColor.bind(this, x, y, board)
 
             return (getNum(leftDirect) + 1 + getNum(rightDirect)) >= 5  
         }
 
         // 判断 4 个轴中是否有一个成立
         checkRoundDirect(x, y, board, roundDirect) {
-            return roundDirect.some(direct => this.checkSingleDirect(x, y, board, direct))
+            return roundDirect.some(direct => this.checkSingleLineDirection(x, y, board, direct))
         }
     }
 
@@ -142,9 +142,9 @@ var Game = (function() {
     }  
 
     return {
-        start(num,{onEnd,onKeep}) {
+        start(size,{onEnd,onKeep}) {
             // 渲染棋盘
-            renderHtm(renderTpl(num))
+            renderHtm(renderTpl(size))
 
             // 生成 gobang 实例并绑定事件
             bindEvent(instantGobang(onEnd,onKeep))
